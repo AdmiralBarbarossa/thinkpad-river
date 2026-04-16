@@ -1,0 +1,6 @@
+[submodule "yazi/flavors/thinkpad-red-oled.yazi"]
+	path = yazi/flavors/thinkpad-red-oled.yazi
+	url = https://github.com/AdmiralBarbarossa/thinkpad-red-oled.yazi.git
+[submodule "vantage"]
+	path = vantage
+	url = https://github.com/AdmiralBarbarossa/Minimal-vantage
