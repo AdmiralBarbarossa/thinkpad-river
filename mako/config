@@ -1,5 +1,3 @@
-# --- OLED-Optimized Mako Notifications ---
-
 background-color=#000000FF
 text-color=#e0e0e0FF
 border-color=#333333FF
@@ -17,13 +15,8 @@ on-button-middle=dismiss-all
 
 font=JetBrainsMono Nerd Font 14
 format=<b>%s</b>\n%b
-
-# Dismiss standard notifications 5 seconds (prevent OLED burn-in)
 default-timeout=5000
 
-# --- Urgency Overrides ---
-
-# Keep urgent notifications on screen until manually dismissed
 [urgency=high]
 border-color=#b9162aFF
 text-color=#e0e0e0FF

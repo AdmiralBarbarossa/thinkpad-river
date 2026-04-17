@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# --- ENVIRONMENT ---
+export XDG_CURRENT_DESKTOP=river
+export XDG_SESSION_TYPE=wayland
+export QT_QPA_PLATFORMTHEME=qt6ct
+export QT_QPA_PLATFORM="wayland;xcb"
+export QT_AUTO_SCREEN_SCALE_FACTOR=1
+export QT_ENABLE_HIGHDPI_SCALING=1
+export GDK_BACKEND="wayland,x11"
+export CLUTTER_BACKEND="wayland"
+export MOZ_ENABLE_WAYLAND=1
+export ELECTRON_OZONE_PLATFORM_HINT=auto
+export XCURSOR_SIZE=22
+
+systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE \
+    QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM GDK_BACKEND MOZ_ENABLE_WAYLAND ELECTRON_OZONE_PLATFORM_HINT
+dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE \
+    QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM GDK_BACKEND MOZ_ENABLE_WAYLAND ELECTRON_OZONE_PLATFORM_HINT
+
+# --- DISPLAY ---
+wlr-randr --output eDP-1 --mode 2880x1800@120.000 --scale 1.25
+
+# --- INPUT ---
+riverctl input "keyboard-*" layout "us"
+riverctl set-repeat 50 300
+
+riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad pointer-accel 0.6
+riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad accel-profile adaptive
+riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad tap enabled
+riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad click-method clickfinger
+riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad natural-scroll enabled
+
+riverctl input "2:10:TPPS/2_Elan_TrackPoint" pointer-accel 0.8
+riverctl input "2:10:TPPS/2_Elan_TrackPoint" accel-profile adaptive
+
+# --- AESTHETICS ---
+riverctl background-color 0x000000
+riverctl border-width 1
+riverctl border-color-focused 0xaaaaaa
+riverctl border-color-unfocused 0x000000
+
+# --- KEYBINDINGS ---
+riverctl map normal Super+Shift Return spawn foot
+riverctl map normal Super D         spawn fuzzel
+riverctl map normal Super W         spawn librewolf
+riverctl map normal Super E         spawn "foot yazi"
+riverctl map normal None XF86Assistant spawn "foot yazi"
+riverctl map normal Super B         spawn "killall -SIGUSR1 waybar"
+riverctl map normal Super+Shift R   spawn "killall waybar mako; $HOME/thinkpad-river/river/init; notify-send 'River reloaded' -t 1500"
+riverctl map normal Super+Shift S   spawn "$HOME/thinkpad-river/scripts/screenshot-area-edit.sh"
+riverctl map normal Super+Shift E   spawn "systemctl --user stop graphical-session.target; riverctl exit"
+riverctl map normal Super+Shift X   spawn "hyprlock"
+
+riverctl map normal Super Q         close
+riverctl map normal Super J         focus-view next
+riverctl map normal Super K         focus-view previous
+riverctl map normal Super+Shift J   swap next
+riverctl map normal Super+Shift K   swap previous
+riverctl map normal Super Return    zoom
+riverctl map normal Super Space     toggle-float
+riverctl map normal Super F         toggle-fullscreen
+
+riverctl map normal Super Period        focus-output next
+riverctl map normal Super Comma         focus-output previous
+riverctl map normal Super+Shift Period  send-to-output next
+riverctl map normal Super+Shift Comma   send-to-output previous
+
+riverctl map normal Super H         send-layout-cmd rivertile "main-ratio -0.05"
+riverctl map normal Super L         send-layout-cmd rivertile "main-ratio +0.05"
+riverctl map normal Super+Shift H   send-layout-cmd rivertile "main-count +1"
+riverctl map normal Super+Shift L   send-layout-cmd rivertile "main-count -1"
+riverctl map normal Super Up        send-layout-cmd rivertile "main-location top"
+riverctl map normal Super Right     send-layout-cmd rivertile "main-location right"
+riverctl map normal Super Down      send-layout-cmd rivertile "main-location bottom"
+riverctl map normal Super Left      send-layout-cmd rivertile "main-location left"
+
+riverctl map normal Super+Alt H         move left 100
+riverctl map normal Super+Alt J         move down 100
+riverctl map normal Super+Alt K         move up 100
+riverctl map normal Super+Alt L         move right 100
+riverctl map normal Super+Alt+Control H snap left
+riverctl map normal Super+Alt+Control J snap down
+riverctl map normal Super+Alt+Control K snap up
+riverctl map normal Super+Alt+Control L snap right
+riverctl map normal Super+Alt+Shift H   resize horizontal -100
+riverctl map normal Super+Alt+Shift J   resize vertical 100
+riverctl map normal Super+Alt+Shift K   resize vertical -100
+riverctl map normal Super+Alt+Shift L   resize horizontal 100
+
+riverctl map-pointer normal Super BTN_LEFT   move-view
+riverctl map-pointer normal Super BTN_RIGHT  resize-view
+riverctl map-pointer normal Super BTN_MIDDLE toggle-float
+
+# --- TAGS ---
+for i in $(seq 1 9)
+do
+    tags=$((1 << ($i - 1)))
+    riverctl map normal Super $i            set-focused-tags $tags
+    riverctl map normal Super+Shift $i      set-view-tags $tags
+    riverctl map normal Super+Control $i    toggle-focused-tags $tags
+    riverctl map normal Super+Shift+Control $i toggle-view-tags $tags
+done
+all_tags=$(((1 << 32) - 1))
+riverctl map normal Super 0       set-focused-tags $all_tags
+riverctl map normal Super+Shift 0 set-view-tags $all_tags
+
+# --- PASSTHROUGH (for virtual machines) ---
+riverctl declare-mode passthrough
+riverctl map normal     Super F11 spawn "notify-send -t 1500 'Passthrough ON'; riverctl enter-mode passthrough"
+riverctl map passthrough Super F11 spawn "notify-send -t 1500 'Passthrough OFF'; riverctl enter-mode normal"
+
+# --- FUNCTION KEYS ---
+for mode in normal locked
+do
+    riverctl map $mode None XF86AudioMute        spawn 'pamixer --toggle-mute'
+    riverctl map $mode None XF86AudioLowerVolume spawn 'pamixer -d 2'
+    riverctl map $mode None XF86AudioRaiseVolume spawn 'pamixer -i 2'
+    riverctl map $mode None XF86AudioMicMute     spawn 'pamixer --default-source --toggle-mute'
+    riverctl map $mode None XF86MonBrightnessDown spawn 'brightnessctl set 1%-'
+    riverctl map $mode None XF86MonBrightnessUp   spawn 'brightnessctl set +1%'
+done
+
+riverctl map normal None XF86Display             spawn "$HOME/thinkpad-river/scripts/display-cycle.sh"
+riverctl map normal None Print                   spawn "$HOME/thinkpad-river/scripts/screenshot-full.sh"
+riverctl map normal None XF86SelectiveScreenshot spawn "$HOME/thinkpad-river/scripts/screenshot-area.sh"
+riverctl map normal None XF86Favorites           spawn "foot -e htop"
+# F8: handled by ThinkPad firmware, no keypress received
+
+# --- STARTUP ---
+systemctl --user restart hypridle.service
+riverctl default-layout rivertile
+riverctl spawn "rivertile -view-padding 0 -outer-padding 0"
+riverctl spawn waybar
+riverctl spawn "sh -c 'sleep 1 && killall -SIGUSR1 waybar'"
+riverctl spawn mako
+
+notify-send "River initialized" -t 1500
