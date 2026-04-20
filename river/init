@@ -19,10 +19,10 @@ dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
     QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM GDK_BACKEND MOZ_ENABLE_WAYLAND ELECTRON_OZONE_PLATFORM_HINT
 
 # --- DISPLAY ---
-wlr-randr --output eDP-1 --mode 2880x1800@120.000 --scale 1.25
+wlr-randr --output eDP-1 --mode 2880x1800@120.000 --scale 1.25 --adaptive-sync enabled
 
 # --- INPUT ---
-riverctl input "keyboard-*" layout "us"
+riverctl input "keyboard-1-1-AT_Translated_Set_2_keyboard" layout "us"
 riverctl set-repeat 50 300
 
 riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad pointer-accel 0.6
@@ -47,6 +47,7 @@ riverctl map normal Super W         spawn librewolf
 riverctl map normal Super E         spawn "foot yazi"
 riverctl map normal None XF86Assistant spawn "foot yazi"
 riverctl map normal Super B         spawn "killall -SIGUSR1 waybar"
+riverctl map normal Super N         spawn "$HOME/thinkpad-river/scripts/wlsunset-toggle.sh"
 riverctl map normal Super+Shift R   spawn "killall waybar mako; $HOME/thinkpad-river/river/init; notify-send 'River reloaded' -t 1500"
 riverctl map normal Super+Shift S   spawn "$HOME/thinkpad-river/scripts/screenshot-area-edit.sh"
 riverctl map normal Super+Shift E   spawn "systemctl --user stop graphical-session.target; riverctl exit"
@@ -107,8 +108,8 @@ riverctl map normal Super+Shift 0 set-view-tags $all_tags
 
 # --- PASSTHROUGH (for virtual machines) ---
 riverctl declare-mode passthrough
-riverctl map normal     Super F11 spawn "notify-send -t 1500 'Passthrough ON'; riverctl enter-mode passthrough"
-riverctl map passthrough Super F11 spawn "notify-send -t 1500 'Passthrough OFF'; riverctl enter-mode normal"
+riverctl map normal     Super F11 spawn "$HOME/thinkpad-river/scripts/passthrough-on.sh"
+riverctl map passthrough Super F11 spawn "$HOME/thinkpad-river/scripts/passthrough-off.sh"
 
 # --- FUNCTION KEYS ---
 for mode in normal locked
@@ -125,10 +126,10 @@ riverctl map normal None XF86Display             spawn "$HOME/thinkpad-river/scr
 riverctl map normal None Print                   spawn "$HOME/thinkpad-river/scripts/screenshot-full.sh"
 riverctl map normal None XF86SelectiveScreenshot spawn "$HOME/thinkpad-river/scripts/screenshot-area.sh"
 riverctl map normal None XF86Favorites           spawn "foot -e htop"
-# F8: handled by ThinkPad firmware, no keypress received
+# F8: handled by ThinkPad firmware for power modes (e.g. ACPI), no keypress received
 
 # --- STARTUP ---
-systemctl --user restart hypridle.service
+systemctl --user start hypridle.service
 riverctl default-layout rivertile
 riverctl spawn "rivertile -view-padding 0 -outer-padding 0"
 riverctl spawn waybar

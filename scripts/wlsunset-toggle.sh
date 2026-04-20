@@ -1,0 +1,11 @@
+#!/bin/bash
+TEMP=3200
+
+if pidof wlsunset > /dev/null; then
+    killall wlsunset
+    notify-send -t 1500 "Night light OFF"
+else
+    wlsunset -t $TEMP -T 6500 -S 00:00 -s 00:01 &
+    notify-send -t 1500 "Night light ON"
+fi
+pkill -RTMIN+1 waybar
