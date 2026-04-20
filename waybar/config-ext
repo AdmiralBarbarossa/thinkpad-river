@@ -8,7 +8,7 @@
     "spacing": 4,
     "modules-left": ["river/tags"],
     "modules-center": ["river/window"],
-    "modules-right": ["backlight", "pulseaudio", "network", "battery", "clock", "tray"],
+    "modules-right": ["custom/nightlight", "pulseaudio", "network", "battery", "clock", "tray"],
     
     "river/tags": {
         "num-tags": 9
@@ -33,16 +33,17 @@
         "format-charging": "{capacity}% ",
         "format-plugged": "{capacity}% ",
         "format-alt": "{time} {icon}",
-        "format-icons": ["", "", "", "", ""]
+        "format-icons": ["", "", "", "", ""],
+        "tooltip-format": "{timeTo} — {power:.1f}W"
     },
     
     "network": {
         "format-wifi": "{essid} ({signalStrength}%) ",
         "format-ethernet": "{ipaddr}/{cidr} ",
-        "tooltip-format": "{ifname} via {gwaddr} ",
         "format-linked": "{ifname} (No IP) ",
         "format-disconnected": "Disconnected 󰖪",
-        "format-alt": "{ifname}: {ipaddr}/{cidr}"
+        "format-alt": "{ifname}: {ipaddr}/{cidr}",
+        "tooltip-format": "↓{bandwidthDownBytes} ↑{bandwidthUpBytes}"
     },
     
     "pulseaudio": {
@@ -61,14 +62,19 @@
             "car": "",
             "default": ["", "", ""]
         },
+        "tooltip-format": "{desc}",
         "on-click": "pamixer -t"
     },
     
-    "backlight": {
-        "format": "{percent}% 󰃟"
-    },
-
     "tray": {
         "spacing": 10
+    },
+
+    "custom/nightlight": {
+        "exec": "if pgrep -x wlsunset > /dev/null; then echo '{\"text\":\"󰖔\",\"tooltip\":\"Night light: ON — 3200K\"}'; else echo '{\"text\":\"󰖛\",\"tooltip\":\"Night light: OFF\"}'; fi",
+        "return-type": "json",
+        "signal": 1,
+        "interval": "once",
+        "on-click": "$HOME/thinkpad-river/scripts/wlsunset-toggle.sh"
     }
 }

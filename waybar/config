@@ -43,7 +43,7 @@
         "format-linked": "{ifname} (No IP) ",
         "format-disconnected": "Disconnected 󰖪",
         "format-alt": "{ifname}: {ipaddr}/{cidr}",
-        "tooltip": false
+        "tooltip-format": "↓{bandwidthDownBytes} ↑{bandwidthUpBytes}"
     },
     
     "pulseaudio": {
@@ -67,7 +67,8 @@
     },
     
     "backlight": {
-        "format": "{percent}% 󰃟"
+        "format": "{percent}% 󰃟",
+        "tooltip": false
     },
 
     "tray": {
@@ -75,7 +76,7 @@
     },
 
     "custom/nightlight": {
-        "exec": "if pidof wlsunset > /dev/null; then echo '{\"text\":\"󰖔\",\"tooltip\":\"Night light: ON — 3200K\"}'; else echo '{\"text\":\"󰖛\",\"tooltip\":\"Night light: OFF\"}'; fi",
+        "exec": "if pgrep -x wlsunset > /dev/null; then echo '{\"text\":\"󰖔\",\"tooltip\":\"Night light: ON — 3200K\"}'; else echo '{\"text\":\"󰖛\",\"tooltip\":\"Night light: OFF\"}'; fi",
         "return-type": "json",
         "signal": 1,
         "interval": "once",
