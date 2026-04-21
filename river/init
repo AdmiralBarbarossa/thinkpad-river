@@ -21,7 +21,7 @@ dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
     GDK_BACKEND MOZ_ENABLE_WAYLAND ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE
 
 # --- DISPLAY ---
-wlr-randr --output eDP-1 --mode 2880x1800@120.000 --scale 1.25 --adaptive-sync enabled
+sleep 1 && wlr-randr --output eDP-1 --mode 2880x1800@120.000 --scale 1.25 --adaptive-sync enabled &
 
 # --- INPUT ---
 riverctl input "keyboard-1-1-AT_Translated_Set_2_keyboard" layout "us"
