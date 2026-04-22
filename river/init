@@ -12,6 +12,7 @@ export CLUTTER_BACKEND="wayland"
 export MOZ_ENABLE_WAYLAND=1
 export ELECTRON_OZONE_PLATFORM_HINT=auto
 export XCURSOR_SIZE=22
+export GTK_CSD=0
 
 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE \
     QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM QT_AUTO_SCREEN_SCALE_FACTOR QT_ENABLE_HIGHDPI_SCALING \
@@ -21,7 +22,7 @@ dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
     GDK_BACKEND MOZ_ENABLE_WAYLAND ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE
 
 # --- DISPLAY ---
-sleep 1 && wlr-randr --output eDP-1 --mode 2880x1800@120.000 --scale 1.25 --adaptive-sync enabled &
+sleep 2 && wlr-randr --output eDP-1 --mode 2880x1800@120.000 --scale 1.25 &
 
 # --- INPUT ---
 riverctl input "keyboard-1-1-AT_Translated_Set_2_keyboard" layout "us"
