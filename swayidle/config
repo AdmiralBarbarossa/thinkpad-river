@@ -1,0 +1,6 @@
+timeout 60 'brightnessctl -s set 2' resume 'brightnessctl -r'
+timeout 120 'pidof waylock || waylock -init-color 000000 -input-color 0d0000 -fail-color b9162a'
+timeout 180 'wlr-randr --output eDP-1 --off' resume '$HOME/thinkpad-river/swayidle/resume-display.sh'
+timeout 600 'systemctl suspend'
+before-sleep 'pidof waylock || waylock -init-color 000000 -input-color 0d0000 -fail-color b9162a &'
+after-resume 'sleep 2; $HOME/thinkpad-river/swayidle/resume-display.sh'

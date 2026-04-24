@@ -54,7 +54,7 @@ riverctl map normal Super N         spawn "$HOME/thinkpad-river/scripts/wlsunset
 riverctl map normal Super+Shift R   spawn "killall waybar mako; $HOME/thinkpad-river/river/init; notify-send 'River reloaded' -t 1500"
 riverctl map normal Super+Shift S   spawn "$HOME/thinkpad-river/scripts/screenshot-area-edit.sh"
 riverctl map normal Super+Shift E   spawn "systemctl --user stop graphical-session.target; riverctl exit"
-riverctl map normal Super+Shift X   spawn "hyprlock"
+riverctl map normal Super+Shift X   spawn "waylock -init-color 000000 -input-color 0d0000 -fail-color b9162a"
 
 riverctl map normal Super Q         close
 riverctl map normal Super J         focus-view next
@@ -132,7 +132,7 @@ riverctl map normal None XF86Favorites           spawn "foot -e htop"
 # F8: handled by ThinkPad firmware for power modes (e.g. ACPI), no keypress received
 
 # --- STARTUP ---
-systemctl --user start hypridle.service
+pkill swayidle; swayidle -C "$HOME/thinkpad-river/swayidle/config" &
 riverctl default-layout rivertile
 riverctl spawn "rivertile -view-padding 0 -outer-padding 0"
 riverctl spawn waybar
