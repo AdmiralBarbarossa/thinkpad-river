@@ -1,4 +1,14 @@
 #!/bin/bash
+RICEDIR="$(dirname "$(readlink -f "$0")")/.."
+
+# --- PREFERENCES ---
+BROWSER="librewolf"
+
+# --- HARDWARE ---
+INT="eDP-1"
+EXT="DP-1"
+INTMODE="2880x1800@120.000"
+INTSCALE="1.25"
 
 # --- ENVIRONMENT ---
 export XDG_CURRENT_DESKTOP=river
@@ -22,7 +32,7 @@ dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
     GDK_BACKEND MOZ_ENABLE_WAYLAND ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE
 
 # --- DISPLAY ---
-sleep 0.5 && wlr-randr --output eDP-1 --mode 2880x1800@120.000 --scale 1.25 &
+sleep 0.5 && wlr-randr --output "$INT" --mode "$INTMODE" --scale "$INTSCALE" &
 
 # --- INPUT ---
 riverctl input "keyboard-1-1-AT_Translated_Set_2_keyboard" layout "us"
@@ -46,13 +56,13 @@ riverctl border-color-unfocused 0x000000
 # --- KEYBINDINGS ---
 riverctl map normal Super+Shift Return spawn foot
 riverctl map normal Super D         spawn fuzzel
-riverctl map normal Super W         spawn librewolf
+riverctl map normal Super W         spawn "$BROWSER"
 riverctl map normal Super E         spawn "foot yazi"
 riverctl map normal None XF86Assistant spawn "foot yazi"
 riverctl map normal Super B         spawn "killall -SIGUSR1 waybar"
-riverctl map normal Super N         spawn "$HOME/thinkpad-river/scripts/wlsunset-toggle.sh"
-riverctl map normal Super+Shift R   spawn "killall waybar mako; $HOME/thinkpad-river/river/init; notify-send 'River reloaded' -t 1500"
-riverctl map normal Super+Shift S   spawn "$HOME/thinkpad-river/scripts/screenshot-area-edit.sh"
+riverctl map normal Super N         spawn "$RICEDIR/scripts/wlsunset-toggle.sh"
+riverctl map normal Super+Shift R   spawn "killall waybar mako; $RICEDIR/river/init; notify-send 'River reloaded' -t 1500"
+riverctl map normal Super+Shift S   spawn "$RICEDIR/scripts/screenshot-area-edit.sh"
 riverctl map normal Super+Shift E   spawn "systemctl --user stop graphical-session.target; riverctl exit"
 riverctl map normal Super+Shift X   spawn "waylock -init-color 000000 -input-color 0d0000 -fail-color b9162a"
 
@@ -111,8 +121,8 @@ riverctl map normal Super+Shift 0 set-view-tags $all_tags
 
 # --- PASSTHROUGH (for virtual machines) ---
 riverctl declare-mode passthrough
-riverctl map normal     Super F11 spawn "$HOME/thinkpad-river/scripts/passthrough-on.sh"
-riverctl map passthrough Super F11 spawn "$HOME/thinkpad-river/scripts/passthrough-off.sh"
+riverctl map normal     Super F11 spawn "$RICEDIR/scripts/passthrough-on.sh"
+riverctl map passthrough Super F11 spawn "$RICEDIR/scripts/passthrough-off.sh"
 
 # --- FUNCTION KEYS ---
 for mode in normal locked
@@ -125,14 +135,14 @@ do
     riverctl map $mode None XF86MonBrightnessUp   spawn 'brightnessctl set +1%'
 done
 
-riverctl map normal None XF86Display             spawn "$HOME/thinkpad-river/scripts/display-cycle.sh"
-riverctl map normal None Print                   spawn "$HOME/thinkpad-river/scripts/screenshot-full.sh"
-riverctl map normal None XF86SelectiveScreenshot spawn "$HOME/thinkpad-river/scripts/screenshot-area.sh"
+riverctl map normal None XF86Display             spawn "$RICEDIR/scripts/display-cycle.sh"
+riverctl map normal None Print                   spawn "$RICEDIR/scripts/screenshot-full.sh"
+riverctl map normal None XF86SelectiveScreenshot spawn "$RICEDIR/scripts/screenshot-area.sh"
 riverctl map normal None XF86Favorites           spawn "foot -e htop"
 # F8: handled by ThinkPad firmware for power modes (e.g. ACPI), no keypress received
 
 # --- STARTUP ---
-pkill swayidle; swayidle -C "$HOME/thinkpad-river/swayidle/config" &
+pkill swayidle; swayidle -C "$RICEDIR/swayidle/config" &
 riverctl default-layout rivertile
 riverctl spawn "rivertile -view-padding 0 -outer-padding 0"
 riverctl spawn waybar

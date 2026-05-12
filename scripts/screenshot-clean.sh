@@ -1,2 +1,2 @@
 #!/bin/bash
-find "$HOME/Pictures" -maxdepth 1 -name "*.png" -mtime +14 -delete
+find "${XDG_PICTURES_DIR:-$HOME/Pictures}" -maxdepth 1 -name "*.png" -mtime +14 -delete
