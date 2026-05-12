@@ -1,3 +1,4 @@
+set selection-clipboard clipboard
 set guioptions ""
 set render-loading false
 set zoom-step 10
