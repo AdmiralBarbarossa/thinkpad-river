@@ -41,6 +41,7 @@ echo ""
 patchv() {
     local file="$1" var="$2" val="$3"
     sed -i "s|^${var}=.*|${var}=\"${val}\"|" "$file"
+    grep -q "^${var}=\"${val}\"" "$file" || echo "Warning: failed to patch $var in $file"
 }
 
 for f in "$RICEDIR/river/init" "$RICEDIR/scripts/display-cycle.sh"; do
