@@ -2,3 +2,18 @@ set selection-clipboard clipboard
 set guioptions ""
 set render-loading false
 set zoom-step 10
+
+set default-bg              "#000000"
+set default-fg              "#e0e0e0"
+set statusbar-bg            "#000000"
+set statusbar-fg            "#e0e0e0"
+set inputbar-bg             "#000000"
+set inputbar-fg             "#e0e0e0"
+set completion-bg           "#000000"
+set completion-fg           "#e0e0e0"
+set completion-highlight-bg "#b9162a"
+set completion-highlight-fg "#e0e0e0"
+set highlight-color         "#b9162a"
+set highlight-active-color  "#b9162a"
+set recolor-lightcolor      "#000000"
+set recolor-darkcolor       "#e0e0e0"
