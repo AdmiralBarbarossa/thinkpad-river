@@ -23,23 +23,32 @@ current=$(cat "$STATE" 2>/dev/null || echo "extend")
 
 case "$current" in
     internal)
-        wlr-randr --output "$INT" --off --output "$EXT" --on --scale 1
-        echo "external" > "$STATE"
-        restartwaybar "$WAYBARE"
-        notify-send -t 1500 "External only"
+        if wlr-randr --output "$INT" --off --output "$EXT" --on --scale 1; then
+            echo "external" > "$STATE"
+            restartwaybar "$WAYBARE"
+            notify-send -t 1500 "External only"
+        else
+            notify-send -t 2000 "Display switch failed"
+        fi
         ;;
     external)
-        wlr-randr --output "$INT" --on --scale "$INTSCALE" --mode "$INTMODE" \
-                  --output "$EXT" --on --scale 1 --pos 2304,0
-        echo "extend" > "$STATE"
-        restartwaybar "$WAYBARI" "$WAYBARE"
-        notify-send -t 1500 "Extend"
+        if wlr-randr --output "$INT" --on --scale "$INTSCALE" --mode "$INTMODE" \
+                     --output "$EXT" --on --scale 1 --pos 2304,0; then
+            echo "extend" > "$STATE"
+            restartwaybar "$WAYBARI" "$WAYBARE"
+            notify-send -t 1500 "Extend"
+        else
+            notify-send -t 2000 "Display switch failed"
+        fi
         ;;
     extend)
-        wlr-randr --output "$INT" --on --scale "$INTSCALE" --mode "$INTMODE" \
-                  --output "$EXT" --off
-        echo "internal" > "$STATE"
-        restartwaybar "$WAYBARI"
-        notify-send -t 1500 "Internal only"
+        if wlr-randr --output "$INT" --on --scale "$INTSCALE" --mode "$INTMODE" \
+                     --output "$EXT" --off; then
+            echo "internal" > "$STATE"
+            restartwaybar "$WAYBARI"
+            notify-send -t 1500 "Internal only"
+        else
+            notify-send -t 2000 "Display switch failed"
+        fi
         ;;
 esac
