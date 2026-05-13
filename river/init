@@ -18,7 +18,6 @@ export QT_QPA_PLATFORM="wayland;xcb"
 export QT_AUTO_SCREEN_SCALE_FACTOR=1
 export QT_ENABLE_HIGHDPI_SCALING=1
 export GDK_BACKEND="wayland,x11"
-export CLUTTER_BACKEND="wayland"
 export MOZ_ENABLE_WAYLAND=1
 export ELECTRON_OZONE_PLATFORM_HINT=auto
 export XCURSOR_SIZE=22
@@ -146,7 +145,7 @@ pkill swayidle; swayidle -C "$RICEDIR/swayidle/config" &
 riverctl default-layout rivertile
 riverctl spawn "rivertile -view-padding 0 -outer-padding 0"
 riverctl spawn waybar
-riverctl spawn "sh -c 'sleep 1 && killall -SIGUSR1 waybar'"
+(sleep 1 && killall -SIGUSR1 waybar) &
 riverctl spawn mako
 
 notify-send "River initialized" -t 1500
