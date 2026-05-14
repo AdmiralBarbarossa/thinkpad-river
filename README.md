@@ -200,7 +200,7 @@ Then update the corresponding lines in `river/init` accordingly.
 
 ## Notifications
 
-Mako is configured with a dark theme and ThinkPad red accent for urgency. Waybar shows battery time remaining and live power draw (watts) on hover, and network upload/download bandwidth on hover.
+Mako is configured with a dark theme and ThinkPad red accent for urgency.
 
 - **Dismiss single:** right-click
 - **Dismiss all:** middle-click
@@ -223,7 +223,7 @@ Zathura uses its default vim-style keybindings for navigation (`j/k` scroll, `gg
 
 ## System Monitor
 
-Htop is pre-configured with a two-screen layout — the first shows processes sorted by memory usage with CPU frequency and temperature, the second shows I/O activity. This differs from stock htop's default single-screen view.
+Htop is pre-configured with a two-screen layout — the first shows processes sorted by CPU usage with frequency and temperature meters, the second shows I/O activity. This differs from stock htop's default single-screen view.
 
 ## Display Scaling
 
@@ -246,7 +246,7 @@ The internal display runs at 2880x1800 with a scale of 1.25. At native resolutio
 
 ```bash
 # cron example — runs daily at midnight
-0 0 * * * /home/yourusername/thinkpad-river/scripts/screenshot-clean.sh
+0 0 * * * ~/thinkpad-river/scripts/screenshot-clean.sh
 ```
 
 ## Uninstall
@@ -259,7 +259,14 @@ rm -f ~/.config/mako ~/.config/yazi ~/.config/zathura ~/.config/htop ~/.config/f
 sudo make -C ~/thinkpad-river/vantage uninstall
 ```
 
-Adjust the path if you cloned elsewhere. Then delete the repo directory.
+Adjust the path if you cloned elsewhere, then delete the repo directory.
+
+## Known Limitations
+
+- **`display-cycle.sh` extend position** — in extend mode, both displays share a logical coordinate plane. The external display must be positioned where the internal one ends. The X offset is the internal display's physical width divided by its scale (2880 ÷ 1.25 = 2304), giving `--pos 2304,0` where Y is always 0 for side-by-side layouts. This has nothing to do with the external display's own scale or rendering — it is purely a placement offset. If you install with a different internal resolution or scale, recalculate and update `--pos` in `scripts/display-cycle.sh` accordingly.
+- **`swayidle/config` inline output name** — the display-off timeout has the internal output name inlined rather than via a variable (swayidle config is not a shell script). The installer patches it, but manual edits must keep it in sync.
+- **Waybar configs are intentionally separate** — `waybar/config` targets the internal display and `waybar/config-ext` targets the external one. A single shared config does not work correctly in a multi-monitor setup, so two files are required. The only meaningful differences are the `output` field and the `backlight` module (internal only). Non-output-specific changes (new modules, style edits) must be applied to both files.
+- **Mako has no output binding** — notifications follow focus, so on external-only mode they appear on the external display.
 
 ## Troubleshooting
 
@@ -280,10 +287,3 @@ sleep 1 && wlr-randr ...
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
-## Known Limitations
-
-- **`display-cycle.sh` extend position** — in extend mode, both displays share a logical coordinate plane. The external display must be positioned where the internal one ends. The X offset is the internal display's physical width divided by its scale (2880 ÷ 1.25 = 2304), giving `--pos 2304,0` where Y is always 0 for side-by-side layouts. This has nothing to do with the external display's own scale or rendering — it is purely a placement offset. If you install with a different internal resolution or scale, recalculate and update `--pos` in `scripts/display-cycle.sh` accordingly.
-- **`swayidle/config` inline output name** — the display-off timeout has the internal output name inlined rather than via a variable (swayidle config is not a shell script). The installer patches it, but manual edits must keep it in sync.
-- **Waybar configs are duplicated** — `waybar/config` and `waybar/config-ext` share all module definitions; only the `output` field and `backlight` module differ.
-- **Mako has no output binding** — notifications follow focus, so on external-only mode they appear on the external display.
