@@ -284,6 +284,8 @@ sleep 1 && wlr-randr ...
 
 **Waybar not appearing or appearing blank on startup** — waybar launches before River's IPC socket is fully ready. The init script sends `SIGUSR1` after a 1 second delay to force a refresh. If the bar is missing or empty after login, `Super + Shift + R` to reload River will restore it.
 
+**`Super + B` hides the bar but leaves a blank strip** — waybar's `"exclusive": true` reserves screen space permanently regardless of hide state. This is a waybar limitation; the strip cannot be reclaimed without switching to `"exclusive": false`, which causes the bar to overlap window content on reveal. Current config accepts the strip in exchange for no overlap.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
