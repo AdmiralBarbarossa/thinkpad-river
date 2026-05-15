@@ -7,7 +7,7 @@
 [![Hardware: ThinkPad](https://img.shields.io/badge/Hardware-ThinkPad-red)](https://www.lenovo.com/thinkpad)
 [![Kernel: 5.17+](https://img.shields.io/badge/Kernel-5.17%2B-informational?logo=linux&logoColor=white)](https://kernel.org)
 
-A barebones Wayland rice for ThinkPads, built on [River](https://codeberg.org/river/river). No wallpaper, no compositor effects, no decorations — nothing that doesn't serve a direct purpose. Pure black everywhere, subpixel rendering disabled, optimized for OLED panels. TrackPoint, ELAN touchpad, battery thresholds, thermal profiles, and hardware controls are all first-class concerns via [vantage](https://github.com/AdmiralBarbarossa/Minimal-vantage). Keyboard-driven throughout with vim-style navigation.
+A barebones Wayland rice for ThinkPads, built on [River](https://codeberg.org/river/river). No wallpaper, no compositor effects, no decorations — nothing that doesn't serve a direct purpose. Pure black everywhere, subpixel rendering disabled, optimized for OLED panels. Battery thresholds and thermal profiles are managed via [vantage](https://github.com/AdmiralBarbarossa/Minimal-vantage), a keyboard-driven TUI for ThinkPad ACPI controls. Keyboard-driven throughout with vim-style navigation.
 
 ![preview](screenshots/preview.png)
 
