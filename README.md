@@ -30,7 +30,7 @@ A barebones Wayland rice for ThinkPads, built on [River](https://codeberg.org/ri
 
 - Linux kernel 5.17+ (battery threshold support)
 - River (includes rivertile), Waybar, Foot, Fuzzel, Mako, Swayidle, Waylock
-- Wlr-randr (usually bundled with River setups)
+- Wlr-randr (already bundled with River setups), Wlopm
 - Grim, Slurp, Wl-clipboard, Swappy (screenshots)
 - Brightnessctl, Pamixer, Wlsunset, libnotify (notify-send)
 - Yazi, Zathura, Htop
@@ -48,7 +48,7 @@ cd thinkpad-river
 
 The installer will ask for your display output names, mode, scale, repo location, and default browser — with your ThinkPad's defaults pre-filled. It then patches all configs in place and installs vantage.
 
-After installation, symlink the configs into `~/.config` (adjust the path if you cloned elsewhere):
+Symlink the configs into `~/.config` (adjust the path if you cloned elsewhere):
 
 ```bash
 RICE=~/thinkpad-river
@@ -57,6 +57,7 @@ ln -sf $RICE/waybar      ~/.config/waybar
 ln -sf $RICE/foot        ~/.config/foot
 ln -sf $RICE/fuzzel      ~/.config/fuzzel
 ln -sf $RICE/mako        ~/.config/mako
+ln -sf $RICE/swayidle    ~/.config/swayidle
 ln -sf $RICE/yazi        ~/.config/yazi
 ln -sf $RICE/zathura     ~/.config/zathura
 ln -sf $RICE/htop        ~/.config/htop
@@ -65,45 +66,63 @@ ln -sf $RICE/fontconfig  ~/.config/fontconfig
 
 > `fontconfig` disables subpixel hinting and LCD filtering — optimised for OLED panels where subpixel rendering causes colour fringing.
 
+Create the River session service (required for `graphical-session.target` and xdg-desktop-portal):
+
+```bash
+mkdir -p ~/.config/systemd/user
+cat > ~/.config/systemd/user/river-session.service << 'EOF'
+[Unit]
+Description=River Wayland compositor session
+BindsTo=graphical-session.target
+Wants=graphical-session-pre.target
+After=graphical-session-pre.target
+
+[Service]
+Type=simple
+ExecStart=/bin/true
+RemainAfterExit=yes
+EOF
+```
+
+Enable mako's systemd user service:
+
+```bash
+systemctl --user enable mako.service
+```
+
 ## River Defaults
 
 River ships with no keybindings or layout out of the box — everything must be configured explicitly. This rice wires up River's built-in features but does not modify their underlying behaviour:
 
-- **Tiling** — handled by rivertile with zero view padding and zero outer padding (no gaps)
-- **Tags** — River's tag system is used as-is; 9 tags configured, tag 1 focused on startup
-- **Floating** — River's native float toggle, move, resize, and snap are all standard
-- **Passthrough mode** — River's built-in mode system; this rice declares one passthrough mode for VM use
-- **Locked mode** — function keys (volume, brightness) remain active on the lock screen via River's `locked` mode mapping
+- **Tiling** — rivertile, zero view padding and zero outer padding (no gaps)
+- **Tags** — 9 tags configured, tag 1 focused on startup
+- **Floating** — native float toggle, move, resize, and snap
+- **Passthrough mode** — one passthrough mode declared for VM use
+- **Locked mode** — volume and brightness keys remain active on the lock screen
 
-**What was explicitly set:**
+**Explicitly set:**
 
-- Border: 1px, focused `#707070`, unfocused `#000000` (invisible against black background)
-- Key repeat: 50ms delay, 300ms interval
+- Border: 1px, focused `#707070`, unfocused `#000000`
+- Key repeat: 300ms delay, 50 repeats/second
 - Layout: rivertile with `-view-padding 0 -outer-padding 0`
 - Background: `#000000`
-- `GTK_CSD=0` — client-side decorations disabled globally, removing title bars from GTK apps
+- `GTK_CSD=0` — removes title bars from GTK apps globally
 
 ## Input Devices
 
-Input configuration in `river/init` uses hardware-specific device identifiers for the keyboard, ELAN touchpad, and TrackPoint. These names are tied to the hardware they were written on and may differ on other ThinkPad models. To find your device names:
+Input configuration uses hardware-specific device identifiers for the keyboard, ELAN touchpad, and TrackPoint. These are tied to the hardware this was written on and may differ on other ThinkPad models. To find your device names:
 
 ```bash
 riverctl list-inputs
 ```
 
-Then update the corresponding lines in `river/init` accordingly.
+Then update the corresponding lines in `river/init`.
 
-**Touchpad settings (ELAN):**
-- Pointer acceleration: 0.6, adaptive profile
-- Natural scroll: enabled
-- Tap-to-click: enabled
-- Click method: clickfinger
+**Touchpad (ELAN):** acceleration 0.6 adaptive, natural scroll, tap-to-click, clickfinger
 
-**TrackPoint settings:**
-- Pointer acceleration: 0.8, adaptive profile
+**TrackPoint:** acceleration 0.8 adaptive
 
-**Keyboard:**
-- Layout hardcoded to `us` — change `layout "us"` in `river/init` for other layouts
+**Keyboard:** layout hardcoded to `us` — change `layout "us"` in `river/init` for other layouts
 
 ## Keybindings
 
@@ -116,7 +135,7 @@ Then update the corresponding lines in `river/init` accordingly.
 | `Super + E` | File manager (yazi) |
 | `XF86Assistant` | File manager (yazi) — ThinkPad AI key |
 | `Super + N` | Toggle night light (3200K via wlsunset) |
-| `Super + B` | Toggle waybar visibility (bar auto-hides by default, reappears on hover) |
+| `Super + B` | Toggle waybar visibility |
 
 ### Windows
 | Key | Action |
@@ -164,7 +183,7 @@ Then update the corresponding lines in `river/init` accordingly.
 ### Screenshots
 | Key | Action |
 |---|---|
-| `F9 / PrtSc` | Full screen to `$XDG_PICTURES_DIR` (falls back to `~/Pictures`) |
+| `PrtSc` | Full screen to `$XDG_PICTURES_DIR` (falls back to `~/Pictures`) |
 | `F10 (XF86SelectiveScreenshot)` | Area to clipboard |
 | `Super + Shift + S` | Area with editor (swappy) |
 
@@ -177,11 +196,11 @@ Then update the corresponding lines in `river/init` accordingly.
 | `F4` | Mic mute |
 | `F5` | Brightness down |
 | `F6` | Brightness up |
-| `F8` | Cycle power profiles (battery saver → balanced → performance) — ThinkPad firmware, no keypress reaches River |
+| `F8` | Cycle power profiles — handled by ThinkPad firmware, no keypress reaches River |
 | `F12 (XF86Favorites)` | Htop |
 | `Super + F11` | Toggle VM passthrough mode — suspends all River keybinds so the guest receives input directly; `Super + F11` again to exit |
 
-> **Note:** Function key keycodes vary between ThinkPad models and FnLock state. This applies to display cycling and screenshot keys too. The bindings above reflect keysyms as configured — your hardware may emit different codes. Use [wev](https://git.sr.ht/~sircmpwn/wev) to inspect actual keycodes and adjust `river/init` accordingly.
+> **Note:** Function key keycodes vary between ThinkPad models and FnLock state. Use [wev](https://git.sr.ht/~sircmpwn/wev) to inspect actual keycodes and adjust `river/init` accordingly.
 
 ### System
 | Key | Action |
@@ -198,13 +217,22 @@ Then update the corresponding lines in `river/init` accordingly.
 | 180s | Display off |
 | 600s | Suspend |
 
+## Idle & Lock
+
+Swayidle manages all idle and sleep behaviour. Wlopm cuts display power at the 180s timeout without removing the output from River, so waylock keeps its surface through display-off and suspend. Swayidle runs with `-w` to hold a systemd sleep inhibitor; waylock runs with `-fork-on-lock` to fully grab the session lock before sleep proceeds.
+
+**Lock screen colours:**
+- Locked: `#000000` — black
+- Typing: `#333333` — dark grey
+- Failed attempt: `#b9162a` — ThinkPad red
+
 ## Notifications
 
-Mako is configured with a dark theme and ThinkPad red accent for urgency.
+Mako runs as a systemd user service, started on login. Configured with a dark theme and ThinkPad red accent for urgency.
 
 - **Dismiss single:** right-click
 - **Dismiss all:** middle-click
-- **High urgency:** persistent (no timeout), red border — used for critical system alerts
+- **High urgency:** persistent (no timeout), red border
 - **Default timeout:** 5 seconds
 
 ## Terminal
@@ -213,7 +241,7 @@ Foot is configured with:
 
 - Scrollback: 5000 lines
 - `$TERM`: `xterm-256color` — if you encounter compatibility issues with terminal apps, this is the first thing to check
-- DPI-aware rendering enabled — scales correctly with fractional scaling
+- DPI-aware rendering enabled
 - Cursor: blinking white beam
 - Scroll wheel: scrollback navigation; `Ctrl + scroll` adjusts font size
 
@@ -227,35 +255,24 @@ Htop is pre-configured with a two-screen layout — the first shows processes so
 
 ## Display Scaling
 
-The internal display runs at 2880x1800 with a scale of 1.25. At native resolution on a high-density ThinkPad panel, everything would be rendered too small to be practical. Scaling tells the compositor to render the desktop at 1.25× so that UI elements, text, and windows appear at a comfortable size while still benefiting from the panel's high pixel density.
-
-**Why 1.25 and not 2?** Integer scales (1×, 2×) are pixel-perfect — every logical pixel maps exactly to a whole number of physical pixels. 1.25 is fractional, which means some elements get rounded at the pixel boundary. In practice this is imperceptible on a dense OLED panel, and 1.25 gives a better balance between readability and screen real estate than 2× (which would be too large) or 1× (which would be too small).
-
-**Pros:**
-- Text and UI are comfortably sized without wasting the panel's resolution
-- Native Wayland apps (foot, fuzzel, waybar) render crisply at any scale
-- OLED pixel density masks any fractional rounding artifacts
-
-**Cons:**
-- XWayland apps do not support fractional scaling natively — they render at 1× and get upscaled, which can look slightly soft
-- The logical width of the display becomes 2304px instead of 2880px, which affects multi-monitor positioning (see Known Limitations)
+The internal display runs at 2880x1800 with a scale of 1.25. Integer scales (1×, 2×) are pixel-perfect but 2× is too large and 1× is too small for this panel. 1.25 gives a usable balance — fractional rounding is imperceptible on a dense OLED. XWayland apps render at 1× and get upscaled, which can look slightly soft. The logical resolution becomes 2304×1440, which affects multi-monitor positioning (see Known Limitations).
 
 ## Screenshot Cleanup
 
-`scripts/screenshot-clean.sh` deletes screenshots older than 14 days from your pictures directory. It is not wired up automatically — add it to a cron job or systemd timer to run periodically:
+`scripts/screenshot-clean.sh` deletes screenshots older than 14 days from your pictures directory. Not wired up automatically — add it to a cron job or systemd timer:
 
 ```bash
-# cron example — runs daily at midnight
 0 0 * * * ~/thinkpad-river/scripts/screenshot-clean.sh
 ```
 
 ## Uninstall
 
-Remove symlinks and uninstall vantage:
-
 ```bash
 rm -f ~/.config/river ~/.config/waybar ~/.config/foot ~/.config/fuzzel
-rm -f ~/.config/mako ~/.config/yazi ~/.config/zathura ~/.config/htop ~/.config/fontconfig
+rm -f ~/.config/mako ~/.config/swayidle ~/.config/yazi ~/.config/zathura
+rm -f ~/.config/htop ~/.config/fontconfig
+rm -f ~/.config/systemd/user/river-session.service
+systemctl --user disable mako.service
 sudo make -C ~/thinkpad-river/vantage uninstall
 ```
 
@@ -263,28 +280,27 @@ Adjust the path if you cloned elsewhere, then delete the repo directory.
 
 ## Known Limitations
 
-- **`display-cycle.sh` extend position** — in extend mode, both displays share a logical coordinate plane. The external display must be positioned where the internal one ends. The X offset is the internal display's physical width divided by its scale (2880 ÷ 1.25 = 2304), giving `--pos 2304,0` where Y is always 0 for side-by-side layouts. This has nothing to do with the external display's own scale or rendering — it is purely a placement offset. If you install with a different internal resolution or scale, recalculate and update `--pos` in `scripts/display-cycle.sh` accordingly.
-- **`swayidle/config` inline output name** — the display-off timeout has the internal output name inlined rather than via a variable (swayidle config is not a shell script). The installer patches it, but manual edits must keep it in sync.
-- **Waybar configs are intentionally separate** — `waybar/config` targets the internal display and `waybar/config-ext` targets the external one. A single shared config does not work correctly in a multi-monitor setup, so two files are required. The only meaningful differences are the `output` field and the `backlight` module (internal only). Non-output-specific changes (new modules, style edits) must be applied to both files.
-- **Mako has no output binding** — notifications follow focus, so on external-only mode they appear on the external display.
+- **`display-cycle.sh` extend position** — the external display offset is hardcoded as `--pos 2304,0` (2880 ÷ 1.25). If you install with a different internal resolution or scale, recalculate and update this value in `scripts/display-cycle.sh`.
+- **`swayidle/config` inline output name** — `wlopm --off eDP-1` has the output name inlined; swayidle config is not a shell script. The installer patches it, but manual edits must keep it in sync.
+- **Brief screen flash on resume** — a single desktop frame may be visible on resume before waylock redraws. This is a known wlroots limitation with no config workaround.
+- **Waybar configs are intentionally separate** — `waybar/config` targets the internal display, `waybar/config-ext` the external. A single shared config does not work correctly across outputs. The only differences are the `output` field and the `backlight` module. Changes must be applied to both files.
+- **Mako has no output binding** — notifications follow focus; on external-only mode they appear on the external display.
 
 ## Troubleshooting
 
-**Display not initializing correctly on startup** — `river/init` delays the `wlr-randr` call by 0.5 seconds to let River finish compositing setup. On slower hardware this may not be enough. If the display mode or scale isn't applied on login, increase the delay in `river/init`:
-
-```bash
-sleep 0.5 && wlr-randr ...
-# increase to 1 or 2 if needed
-sleep 1 && wlr-randr ...
-```
+**Display not initializing correctly on startup** — `river/init` delays the `wlr-randr` call by 0.5 seconds. On slower hardware this may not be enough — increase the delay in `river/init` to 1 or 2 seconds if the mode or scale isn't applied on login.
 
 **Function keys not working** — use `wev` to confirm what keysym your hardware emits, then update the binding in `river/init`.
 
 **Input device settings not applying** — run `riverctl list-inputs` to confirm your device names match the identifiers in `river/init`.
 
-**Waybar not appearing or appearing blank on startup** — waybar launches before River's IPC socket is fully ready. The init script sends `SIGUSR1` after a 1 second delay to force a refresh. If the bar is missing or empty after login, `Super + Shift + R` to reload River will restore it.
+**Waybar not appearing or appearing blank on startup** — the init script sends `SIGUSR1` after 1 second to force a refresh. If the bar is still missing, `Super + Shift + R` will restore it.
 
-**`Super + B` hides the bar but leaves a blank strip** — waybar's `"exclusive": true` reserves screen space permanently regardless of hide state. This is a waybar limitation; the strip cannot be reclaimed without switching to `"exclusive": false`, which causes the bar to overlap window content on reveal. Current config accepts the strip in exchange for no overlap.
+**`Super + B` hides the bar but leaves a blank strip** — waybar's `"exclusive": true` reserves space regardless of hide state. Switching to `"exclusive": false` removes the strip but causes the bar to overlap content on reveal.
+
+**xdg-desktop-portal not starting** — `river-session.service` must exist in `~/.config/systemd/user/`. See Installation.
+
+**Lock screen not appearing on suspend** — confirm swayidle is running with `-w` (`pgrep -a swayidle`). Without it the system may suspend before waylock launches.
 
 ## License
 
