@@ -10,7 +10,7 @@ ask() {
 echo "thinkpad-river installer"
 echo ""
 
-DEPS=(river waybar foot fuzzel mako swayidle waylock wlr-randr
+DEPS=(river waybar foot fuzzel mako swayidle waylock wlr-randr wlopm
       grim slurp wl-copy swappy brightnessctl pamixer wlsunset
       yazi zathura htop notify-send)
 
@@ -51,11 +51,6 @@ for f in "$RICEDIR/river/init" "$RICEDIR/scripts/display-cycle.sh"; do
     patchv "$f" INTSCALE "$INTSCALE"
 done
 
-for f in "$RICEDIR/swayidle/resume-display.sh"; do
-    patchv "$f" INT      "$INT"
-    patchv "$f" INTMODE  "$INTMODE"
-    patchv "$f" INTSCALE "$INTSCALE"
-done
 patchv "$RICEDIR/river/init" BROWSER "$BROWSER"
 
 sed -i \
