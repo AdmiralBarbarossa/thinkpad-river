@@ -1,0 +1,28 @@
+# Machine-specific overrides for river/init.
+# Copy this to river/init.local and fill in your values.
+# init.local is gitignored and never tracked.
+
+# --- PREFERENCES ---
+BROWSER="firefox"       # or librewolf, chromium, etc.
+KBLAYOUT="us"           # keyboard layout (e.g. us, de, fr)
+XCURSOR_SIZE=24         # scale to match your display DPI
+
+# --- DISPLAY ---
+INT="eDP-1"             # internal output name (wlr-randr to list outputs)
+EXT="DP-1"              # external output name (used by scripts/display-cycle.sh)
+INTMODE="1920x1080@60.000"
+INTSCALE="1.0"
+
+# --- INPUT DEVICES ---
+# Get identifiers with: riverctl list-inputs
+KEYBOARD="keyboard-0-0-My_Keyboard"
+TOUCHPAD="pointer-0-0-My_Touchpad"
+TRACKPOINT=""           # leave empty if no trackpoint
+
+# --- VA-API / HARDWARE VIDEO DECODE ---
+# Only needed if your distro puts the VA-API driver in a non-default path.
+# Fedora RPM Fusion nonfree: /usr/lib64/dri-nonfree
+# Arch / most distros: leave these unset (system default applies)
+#LIBVA_DRIVER_NAME="iHD"
+#LIBVA_DRIVERS_PATH="/usr/lib64/dri-nonfree"
+#MOZ_SANDBOX_READ_PATH="/usr/lib64/dri-nonfree"

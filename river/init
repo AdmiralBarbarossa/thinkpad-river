@@ -1,16 +1,10 @@
 #!/bin/bash
 RICEDIR="$(dirname "$(readlink -f "$0")")/.."
 
-# --- PREFERENCES ---
-BROWSER="librewolf"
+# --- MACHINE-LOCAL OVERRIDES ---
+# Copy river/init.local.example to river/init.local and fill in your values.
+[ -f "$RICEDIR/river/init.local" ] && source "$RICEDIR/river/init.local"
 
-# --- HARDWARE ---
-INT="eDP-1"
-EXT="DP-1"
-INTMODE="2880x1800@120.000"
-INTSCALE="1.25"
-
-# --- ENVIRONMENT ---
 export XDG_CURRENT_DESKTOP=river
 export XDG_SESSION_TYPE=wayland
 export QT_QPA_PLATFORMTHEME=qt6ct
@@ -19,33 +13,42 @@ export QT_AUTO_SCREEN_SCALE_FACTOR=1
 export QT_ENABLE_HIGHDPI_SCALING=1
 export GDK_BACKEND="wayland,x11"
 export MOZ_ENABLE_WAYLAND=1
+[ -n "$LIBVA_DRIVER_NAME" ]    && export LIBVA_DRIVER_NAME
+[ -n "$LIBVA_DRIVERS_PATH" ]   && export LIBVA_DRIVERS_PATH
+[ -n "$MOZ_SANDBOX_READ_PATH" ] && export MOZ_SANDBOX_READ_PATH
 export ELECTRON_OZONE_PLATFORM_HINT=auto
-export XCURSOR_SIZE=22
+[ -n "$XCURSOR_SIZE" ] && export XCURSOR_SIZE
 export GTK_CSD=0
 
 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE \
     QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM QT_AUTO_SCREEN_SCALE_FACTOR QT_ENABLE_HIGHDPI_SCALING \
-    GDK_BACKEND MOZ_ENABLE_WAYLAND ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE
+    GDK_BACKEND MOZ_ENABLE_WAYLAND LIBVA_DRIVER_NAME LIBVA_DRIVERS_PATH MOZ_SANDBOX_READ_PATH \
+    ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE
+
 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE \
     QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM QT_AUTO_SCREEN_SCALE_FACTOR QT_ENABLE_HIGHDPI_SCALING \
-    GDK_BACKEND MOZ_ENABLE_WAYLAND ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE
+    GDK_BACKEND MOZ_ENABLE_WAYLAND LIBVA_DRIVER_NAME LIBVA_DRIVERS_PATH MOZ_SANDBOX_READ_PATH \
+    ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE
+
 systemctl --user start river-session.service
 
 # --- DISPLAY ---
 sleep 0.5 && wlr-randr --output "$INT" --mode "$INTMODE" --scale "$INTSCALE" &
 
 # --- INPUT ---
-riverctl input "keyboard-1-1-AT_Translated_Set_2_keyboard" layout "us"
+riverctl input "$KEYBOARD" layout "$KBLAYOUT"
 riverctl set-repeat 50 300
 
-riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad pointer-accel 0.6
-riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad accel-profile adaptive
-riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad tap enabled
-riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad click-method clickfinger
-riverctl input pointer-1267-12981-ELAN06D4:00_04F3:32B5_Touchpad natural-scroll enabled
+riverctl input "$TOUCHPAD" pointer-accel 0.6
+riverctl input "$TOUCHPAD" accel-profile adaptive
+riverctl input "$TOUCHPAD" tap enabled
+riverctl input "$TOUCHPAD" click-method clickfinger
+riverctl input "$TOUCHPAD" natural-scroll enabled
 
-riverctl input "2:10:TPPS/2_Elan_TrackPoint" pointer-accel 0.8
-riverctl input "2:10:TPPS/2_Elan_TrackPoint" accel-profile adaptive
+if [ -n "$TRACKPOINT" ]; then
+    riverctl input "$TRACKPOINT" pointer-accel 0.8
+    riverctl input "$TRACKPOINT" accel-profile adaptive
+fi
 
 # --- AESTHETICS ---
 riverctl background-color 0x000000
@@ -59,10 +62,10 @@ riverctl map normal Super D         spawn fuzzel
 riverctl map normal Super W         spawn "$BROWSER"
 riverctl map normal Super E         spawn "foot yazi"
 riverctl map normal None XF86Assistant spawn "foot yazi"
-riverctl map normal Super B         spawn "killall -SIGUSR1 waybar"
+riverctl map normal Super B         spawn "pkill -SIGUSR1 -x waybar"
 riverctl map normal Super N         spawn "$RICEDIR/scripts/wlsunset-toggle.sh"
 riverctl map normal Super I         spawn "$RICEDIR/scripts/idle-inhibit-toggle.sh"
-riverctl map normal Super+Shift R   spawn "killall waybar; $RICEDIR/river/init; notify-send 'River reloaded' -t 1500"
+riverctl map normal Super+Shift R   spawn "pkill -x waybar; $RICEDIR/river/init; notify-send 'River reloaded' -t 1500"
 riverctl map normal Super+Shift S   spawn "$RICEDIR/scripts/screenshot-area-edit.sh"
 riverctl map normal Super+Shift E   spawn "systemctl --user stop river-session.service; riverctl exit"
 riverctl map normal Super+Shift X   spawn "waylock -fork-on-lock -init-color 0x000000 -input-color 0x333333 -fail-color 0xb9162a"
@@ -143,11 +146,9 @@ riverctl map normal None XF86Favorites           spawn "foot -e htop"
 # F8: handled by ThinkPad firmware for power modes (e.g. ACPI), no keypress received
 
 # --- STARTUP ---
-pkill swayidle; swayidle -w -C "$RICEDIR/swayidle/config" &
+pkill -x swayidle; swayidle -w -C "$RICEDIR/swayidle/config" &
 riverctl default-layout rivertile
 riverctl spawn "rivertile -view-padding 0 -outer-padding 0"
 riverctl spawn waybar
-(sleep 1 && killall -SIGUSR1 waybar) &
+(sleep 1 && pkill -SIGUSR1 -x waybar) &
 systemctl --user start mako.service
-
-notify-send "River initialized" -t 1500
