@@ -29,49 +29,67 @@ fi
 echo "Press Enter to accept the default value shown in brackets."
 echo ""
 
-INT=$(ask     "Internal display output" "eDP-1")
-EXT=$(ask     "External display output" "DP-1")
+INT=$(ask      "Internal display output" "eDP-1")
+EXT=$(ask      "External display output" "DP-1")
 INTMODE=$(ask  "Internal display mode  " "2880x1800@120.000")
 INTSCALE=$(ask "Internal display scale " "1.25")
 CLONEDIR=$(ask "Repo location          " "$HOME/thinkpad-river")
-BROWSER=$(ask  "Default browser        " "librewolf")
+BROWSER=$(ask  "Default browser        " "firefox")
+KBLAYOUT=$(ask "Keyboard layout        " "us")
+XCURSOR=$(ask  "Cursor size            " "24")
 
 echo ""
 
-patchv() {
-    local file="$1" var="$2" val="$3"
-    sed -i "s|^${var}=.*|${var}=\"${val}\"|" "$file"
-    grep -q "^${var}=\"${val}\"" "$file" || echo "Warning: failed to patch $var in $file"
-}
+# Generate river/init.local
+cat > "$RICEDIR/river/init.local" << EOF
+# --- PREFERENCES ---
+BROWSER="$BROWSER"
+KBLAYOUT="$KBLAYOUT"
+XCURSOR_SIZE=$XCURSOR
 
-for f in "$RICEDIR/river/init" "$RICEDIR/scripts/display-cycle.sh"; do
-    patchv "$f" INT      "$INT"
-    patchv "$f" EXT      "$EXT"
-    patchv "$f" INTMODE  "$INTMODE"
-    patchv "$f" INTSCALE "$INTSCALE"
-done
+# --- DISPLAY ---
+INT="$INT"
+EXT="$EXT"          # used by scripts/display-cycle.sh
+INTMODE="$INTMODE"
+INTSCALE="$INTSCALE"
 
-patchv "$RICEDIR/river/init" BROWSER "$BROWSER"
+# --- INPUT DEVICES ---
+# Fill these in after running: riverctl list-inputs
+KEYBOARD=""
+TOUCHPAD=""
+TRACKPOINT=""       # leave empty if no trackpoint
 
-sed -i \
-    -e "s|eDP-1|$INT|g" \
-    -e "s|\$HOME/thinkpad-river|$CLONEDIR|g" \
-    "$RICEDIR/swayidle/config"
+# --- VA-API / HARDWARE VIDEO DECODE ---
+# Only needed if your distro puts the VA-API driver in a non-default path.
+# Fedora RPM Fusion nonfree: /usr/lib64/dri-nonfree
+# Arch / most distros: leave these unset (system default applies)
+#LIBVA_DRIVER_NAME="iHD"
+#LIBVA_DRIVERS_PATH="/usr/lib64/dri-nonfree"
+#MOZ_SANDBOX_READ_PATH="/usr/lib64/dri-nonfree"
+EOF
 
-sed -i \
-    -e "s|\$HOME/thinkpad-river|$CLONEDIR|g" \
-    "$RICEDIR/waybar/config" \
-    "$RICEDIR/waybar/config-ext"
+# Patch swayidle (not a shell script — output name must be inlined)
+sed -i "s|eDP-1|$INT|g" "$RICEDIR/swayidle/config"
 
-echo "Done. Values written:"
+# Patch waybar output fields and script path
+sed -i "s|\"output\": \"eDP-1\"|\"output\": \"$INT\"|" "$RICEDIR/waybar/config"
+sed -i "s|\"output\": \"DP-1\"|\"output\": \"$EXT\"|" "$RICEDIR/waybar/config-ext"
+sed -i "s|\$HOME/thinkpad-river|$CLONEDIR|g" "$RICEDIR/waybar/config" "$RICEDIR/waybar/config-ext"
+
+echo "Done. Written to river/init.local:"
+echo "  Repo location   : $CLONEDIR"
 echo "  Internal output : $INT"
 echo "  External output : $EXT"
 echo "  Mode            : $INTMODE"
 echo "  Scale           : $INTSCALE"
-echo "  Repo location   : $CLONEDIR"
 echo "  Browser         : $BROWSER"
-
+echo "  Keyboard layout : $KBLAYOUT"
+echo "  Cursor size     : $XCURSOR"
 echo ""
+echo "Next: run 'riverctl list-inputs' and fill in KEYBOARD, TOUCHPAD, TRACKPOINT"
+echo "      in river/init.local."
+echo ""
+
 VANTAGEDIR="$RICEDIR/vantage"
 if [ ! -f "$VANTAGEDIR/Makefile" ]; then
     echo "Vantage submodule not initialized. Run: git submodule update --init"

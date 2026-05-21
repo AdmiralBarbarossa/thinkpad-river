@@ -30,7 +30,7 @@ A barebones Wayland rice for ThinkPads, built on [River](https://codeberg.org/ri
 
 - Linux kernel 5.17+ (battery threshold support)
 - River (includes rivertile), Waybar, Foot, Fuzzel, Mako, Swayidle, Waylock
-- Wlr-randr (already bundled with River setups), Wlopm
+- Wlr-randr, Wlopm
 - Grim, Slurp, Wl-clipboard, Swappy (screenshots)
 - Brightnessctl, Pamixer, Wlsunset, libnotify (notify-send)
 - Yazi, Zathura, Htop
@@ -46,7 +46,15 @@ cd thinkpad-river
 ./install.sh
 ```
 
-The installer will ask for your display output names, mode, scale, repo location, and default browser — with your ThinkPad's defaults pre-filled. It then patches all configs in place and installs vantage.
+The installer checks for missing dependencies, then prompts for your repo location, display output names, mode, scale, browser, keyboard layout, and cursor size. It generates `river/init.local` with your values, patches `swayidle/config` and the waybar configs (which are not shell scripts and cannot read `init.local` directly), and installs vantage.
+
+After the installer finishes, fill in your input device identifiers:
+
+```bash
+riverctl list-inputs
+```
+
+Then edit `river/init.local` and set `KEYBOARD`, `TOUCHPAD`, and `TRACKPOINT` to the identifiers shown. Leave `TRACKPOINT` empty if your hardware has none.
 
 Symlink the configs into `~/.config` (adjust the path if you cloned elsewhere):
 
@@ -90,6 +98,51 @@ Enable mako's systemd user service:
 systemctl --user enable mako.service
 ```
 
+## Machine-local config
+
+All machine-specific settings live in `river/init.local`, which is gitignored. The installer generates this file from your answers. If you are setting up manually, copy the example and fill in your values:
+
+```bash
+cp river/init.local.example river/init.local
+```
+
+`init.local` controls:
+
+| Variable | Description |
+|---|---|
+| `BROWSER` | Browser command (e.g. `firefox`, `librewolf`) |
+| `KBLAYOUT` | Keyboard layout (e.g. `us`, `de`, `fr`) |
+| `XCURSOR_SIZE` | Cursor size — scale to match your display DPI |
+| `INT` / `EXT` | Internal and external output names (`wlr-randr` to list) |
+| `INTMODE` / `INTSCALE` | Internal display mode and fractional scale |
+| `KEYBOARD` / `TOUCHPAD` / `TRACKPOINT` | Input device identifiers (`riverctl list-inputs` to find) |
+| `LIBVA_DRIVER_NAME` / `LIBVA_DRIVERS_PATH` / `MOZ_SANDBOX_READ_PATH` | VA-API driver path overrides — only needed if your distro installs the driver outside the default search path |
+
+`display-cycle.sh` also reads `init.local` directly, so display variables only need to be set in one place.
+
+## Hardware video decoding
+
+Firefox and Librewolf support VA-API hardware video decoding on Wayland. On most distros the driver is in the default search path and no extra config is needed. On Fedora with RPM Fusion nonfree the driver lives outside the default path — uncomment and set the `LIBVA_*` variables in `river/init.local`:
+
+```bash
+LIBVA_DRIVER_NAME="iHD"
+LIBVA_DRIVERS_PATH="/usr/lib64/dri-nonfree"
+MOZ_SANDBOX_READ_PATH="/usr/lib64/dri-nonfree"
+```
+
+Then enable hardware decoding in the browser by adding a `user.js` to your profile:
+
+```javascript
+user_pref("media.ffmpeg.vaapi.enabled", true);
+user_pref("media.hardware-video-decoding.enabled", true);
+user_pref("media.hardware-video-decoding.force-enabled", true);
+user_pref("gfx.webrender.all", true);
+user_pref("gfx.webrender.compositor", true);
+user_pref("gfx.webrender.compositor.force-enabled", true);
+```
+
+Verify it worked at `about:support` → Media — H264, VP9, and AV1 should show Hardware Decoding as Supported.
+
 ## River Defaults
 
 River ships with no keybindings or layout out of the box — everything must be configured explicitly. This rice wires up River's built-in features but does not modify their underlying behaviour:
@@ -110,19 +163,19 @@ River ships with no keybindings or layout out of the box — everything must be 
 
 ## Input Devices
 
-Input configuration uses hardware-specific device identifiers for the keyboard, ELAN touchpad, and TrackPoint. These are tied to the hardware this was written on and may differ on other ThinkPad models. To find your device names:
+Input device identifiers are hardware-specific and set in `river/init.local`. To find yours:
 
 ```bash
 riverctl list-inputs
 ```
 
-Then update the corresponding lines in `river/init`.
+Set `KEYBOARD`, `TOUCHPAD`, and `TRACKPOINT` in `river/init.local` to the identifiers shown. Leave `TRACKPOINT` empty if your hardware has none — the config guards against it.
 
-**Touchpad (ELAN):** acceleration 0.6 adaptive, natural scroll, tap-to-click, clickfinger
+**Touchpad:** acceleration 0.6 adaptive, natural scroll, tap-to-click, clickfinger
 
 **TrackPoint:** acceleration 0.8 adaptive
 
-**Keyboard:** layout hardcoded to `us` — change `layout "us"` in `river/init` for other layouts
+**Keyboard layout:** set via `KBLAYOUT` in `river/init.local`
 
 ## Keybindings
 
@@ -134,6 +187,7 @@ Then update the corresponding lines in `river/init`.
 | `Super + W` | Browser |
 | `Super + E` | File manager (yazi) |
 | `XF86Assistant` | File manager (yazi) — ThinkPad AI key |
+| `Super + I` | Toggle idle inhibit (prevents auto-lock/suspend) |
 | `Super + N` | Toggle night light (3200K via wlsunset) |
 | `Super + B` | Toggle waybar visibility |
 
@@ -255,7 +309,7 @@ Htop is pre-configured with a two-screen layout — the first shows processes so
 
 ## Display Scaling
 
-The internal display runs at 2880x1800 with a scale of 1.25. Integer scales (1×, 2×) are pixel-perfect but 2× is too large and 1× is too small for this panel. 1.25 gives a usable balance — fractional rounding is imperceptible on a dense OLED. XWayland apps render at 1× and get upscaled, which can look slightly soft. The logical resolution becomes 2304×1440, which affects multi-monitor positioning (see Known Limitations).
+The internal display scale is set via `INTSCALE` in `river/init.local`. Integer scales (1×, 2×) are pixel-perfect but 2× is too large and 1× too small for high-density panels. Fractional scales give a usable middle ground — rounding is imperceptible on dense OLEDs. XWayland apps render at 1× and get upscaled, which can look slightly soft. The logical resolution (native width ÷ scale) affects multi-monitor positioning, which `display-cycle.sh` computes automatically.
 
 ## Screenshot Cleanup
 
@@ -280,10 +334,10 @@ Adjust the path if you cloned elsewhere, then delete the repo directory.
 
 ## Known Limitations
 
-- **`display-cycle.sh` extend position** — the external display offset is hardcoded as `--pos 2304,0` (2880 ÷ 1.25). If you install with a different internal resolution or scale, recalculate and update this value in `scripts/display-cycle.sh`.
-- **`swayidle/config` inline output name** — `wlopm --off eDP-1` has the output name inlined; swayidle config is not a shell script. The installer patches it, but manual edits must keep it in sync.
-- **Brief screen flash on resume** — a single desktop frame may be visible on resume before waylock redraws. This is a known wlroots limitation with no config workaround.
+- **`swayidle/config` inline output name** — `wlopm --off <output>` has the output name inlined; swayidle config is not a shell script. The installer patches it from `INT`, but if you change `INT` in `init.local` later you must update `swayidle/config` manually.
+- **Waybar configs require re-patching on path changes** — `waybar/config` and `waybar/config-ext` have the repo path and output names patched in by the installer. If you change `CLONEDIR`, `INT`, or `EXT` after the initial install, re-run `install.sh` or update the affected lines manually.
 - **Waybar configs are intentionally separate** — `waybar/config` targets the internal display, `waybar/config-ext` the external. A single shared config does not work correctly across outputs. The only differences are the `output` field and the `backlight` module. Changes must be applied to both files.
+- **Brief screen flash on resume** — a single desktop frame may be visible on resume before waylock redraws. This is a known wlroots limitation with no config workaround.
 - **Mako has no output binding** — notifications follow focus; on external-only mode they appear on the external display.
 
 ## Troubleshooting
@@ -292,7 +346,7 @@ Adjust the path if you cloned elsewhere, then delete the repo directory.
 
 **Function keys not working** — use `wev` to confirm what keysym your hardware emits, then update the binding in `river/init`.
 
-**Input device settings not applying** — run `riverctl list-inputs` to confirm your device names match the identifiers in `river/init`.
+**Input device settings not applying** — run `riverctl list-inputs` and confirm your device identifiers match the values set in `river/init.local`.
 
 **Waybar not appearing or appearing blank on startup** — the init script sends `SIGUSR1` after 1 second to force a refresh. If the bar is still missing, `Super + Shift + R` will restore it.
 
