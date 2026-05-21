@@ -1,5 +1,5 @@
 #!/bin/bash
-RICEDIR="${RICEDIR:-$HOME/.config}"
+RICEDIR="$(dirname "$(readlink -f "$0")")/.."
 
 if pgrep -x swayidle > /dev/null; then
     pkill -x swayidle

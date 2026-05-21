@@ -8,4 +8,4 @@ else
     wlsunset -t $TEMP -T 6500 -S 00:00 -s 00:01 &
     notify-send -t 1500 "Night light ON"
 fi
-killall -SIGUSR1 waybar
+pkill -SIGUSR1 -x waybar

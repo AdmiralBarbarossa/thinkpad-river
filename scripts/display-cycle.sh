@@ -1,10 +1,15 @@
 #!/bin/bash
 RICEDIR="$(dirname "$(readlink -f "$0")")/.."
-INT="eDP-1"
-EXT="DP-1"
-INTMODE="2880x1800@120.000"
-INTSCALE="1.25"
-STATE="/tmp/display-mode"
+if [ ! -f "$RICEDIR/river/init.local" ]; then
+    notify-send -t 3000 "display-cycle: init.local not found — run install.sh first"
+    exit 1
+fi
+source "$RICEDIR/river/init.local"
+STATE="${XDG_RUNTIME_DIR:-/tmp}/display-mode"
+
+EXTPOS=$(awk -v mode="$INTMODE" -v scale="$INTSCALE" '
+    BEGIN { split(mode, a, /[x@]/); printf "%d", a[1] / scale }
+')
 
 if ! wlr-randr | grep -q "^$EXT"; then
     notify-send -t 2000 "No external display connected"
@@ -15,7 +20,7 @@ WAYBARI="$RICEDIR/waybar/config"
 WAYBARE="$RICEDIR/waybar/config-ext"
 
 restartwaybar() {
-    killall waybar
+    pkill -x waybar
     for cfg in "$@"; do waybar -c "$cfg" & done
 }
 
@@ -33,7 +38,7 @@ case "$current" in
         ;;
     external)
         if wlr-randr --output "$INT" --on --scale "$INTSCALE" --mode "$INTMODE" \
-                     --output "$EXT" --on --scale 1 --pos 2304,0; then
+                     --output "$EXT" --on --scale 1 --pos "${EXTPOS},0"; then
             echo "extend" > "$STATE"
             restartwaybar "$WAYBARI" "$WAYBARE"
             notify-send -t 1500 "Extend"
