@@ -18,17 +18,18 @@ export MOZ_ENABLE_WAYLAND=1
 [ -n "$MOZ_SANDBOX_READ_PATH" ] && export MOZ_SANDBOX_READ_PATH
 export ELECTRON_OZONE_PLATFORM_HINT=auto
 [ -n "$XCURSOR_SIZE" ] && export XCURSOR_SIZE
+[ -n "$WLSUNSET_TEMP" ] && export WLSUNSET_TEMP
 export GTK_CSD=0
 
 systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE \
     QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM QT_AUTO_SCREEN_SCALE_FACTOR QT_ENABLE_HIGHDPI_SCALING \
     GDK_BACKEND MOZ_ENABLE_WAYLAND LIBVA_DRIVER_NAME LIBVA_DRIVERS_PATH MOZ_SANDBOX_READ_PATH \
-    ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE
+    ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE WLSUNSET_TEMP
 
 dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE \
     QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM QT_AUTO_SCREEN_SCALE_FACTOR QT_ENABLE_HIGHDPI_SCALING \
     GDK_BACKEND MOZ_ENABLE_WAYLAND LIBVA_DRIVER_NAME LIBVA_DRIVERS_PATH MOZ_SANDBOX_READ_PATH \
-    ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE
+    ELECTRON_OZONE_PLATFORM_HINT XCURSOR_SIZE WLSUNSET_TEMP
 
 systemctl --user start river-session.service
 
@@ -131,12 +132,12 @@ riverctl map passthrough Super F11 spawn "$RICEDIR/scripts/passthrough-off.sh"
 # --- FUNCTION KEYS ---
 for mode in normal locked
 do
-    riverctl map $mode None XF86AudioMute        spawn 'pamixer --toggle-mute'
-    riverctl map $mode None XF86AudioLowerVolume spawn 'pamixer -d 2'
-    riverctl map $mode None XF86AudioRaiseVolume spawn 'pamixer -i 2'
+    riverctl map $mode None XF86AudioMute        spawn "$RICEDIR/scripts/wob-volume.sh mute"
+    riverctl map $mode None XF86AudioLowerVolume spawn "$RICEDIR/scripts/wob-volume.sh down"
+    riverctl map $mode None XF86AudioRaiseVolume spawn "$RICEDIR/scripts/wob-volume.sh up"
     riverctl map $mode None XF86AudioMicMute     spawn 'pamixer --default-source --toggle-mute'
-    riverctl map $mode None XF86MonBrightnessDown spawn 'brightnessctl set 1%-'
-    riverctl map $mode None XF86MonBrightnessUp   spawn 'brightnessctl set +1%'
+    riverctl map $mode None XF86MonBrightnessDown spawn "$RICEDIR/scripts/wob-brightness.sh 1%-"
+    riverctl map $mode None XF86MonBrightnessUp   spawn "$RICEDIR/scripts/wob-brightness.sh +1%"
 done
 
 riverctl map normal None XF86Display             spawn "$RICEDIR/scripts/display-cycle.sh"
@@ -146,6 +147,9 @@ riverctl map normal None XF86Favorites           spawn "foot -e htop"
 # F8: handled by ThinkPad firmware for power modes (e.g. ACPI), no keypress received
 
 # --- STARTUP ---
+WOB_SOCK="${XDG_RUNTIME_DIR}/wob.sock"
+pkill -x wob; rm -f "$WOB_SOCK" && mkfifo "$WOB_SOCK"
+tail -f "$WOB_SOCK" | wob -c "$RICEDIR/wob/wob.ini" &
 pkill -x swayidle; swayidle -w -C "$RICEDIR/swayidle/config" &
 riverctl default-layout rivertile
 riverctl spawn "rivertile -view-padding 0 -outer-padding 0"

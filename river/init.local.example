@@ -6,6 +6,7 @@
 BROWSER="firefox"       # or librewolf, chromium, etc.
 KBLAYOUT="us"           # keyboard layout (e.g. us, de, fr)
 XCURSOR_SIZE=24         # scale to match your display DPI
+WLSUNSET_TEMP=3200      # night light color temperature in Kelvin (1000–6500, lower = warmer)
 
 # --- DISPLAY ---
 INT="eDP-1"             # internal output name (wlr-randr to list outputs)
