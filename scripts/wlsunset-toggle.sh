@@ -1,5 +1,5 @@
 #!/bin/bash
-TEMP=3200
+TEMP=${WLSUNSET_TEMP:-3200}
 
 if pgrep -x wlsunset > /dev/null; then
     pkill -x wlsunset
@@ -8,4 +8,4 @@ else
     wlsunset -t $TEMP -T 6500 -S 00:00 -s 00:01 &
     notify-send -t 1500 "Night light ON"
 fi
-pkill -SIGUSR1 -x waybar
+kill -SIGRTMIN+1 $(pgrep -x waybar)
