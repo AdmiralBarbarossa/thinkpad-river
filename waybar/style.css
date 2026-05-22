@@ -1,12 +1,12 @@
 * {
     font-family: "JetBrainsMono Nerd Font", "Font Awesome 6 Free", sans-serif;
     font-size: 14px;
+    font-weight: bold;
     color: #e0e0e0;
 }
 
 window#waybar {
     background-color: #000000;
-    border-bottom: 1px solid #222222;
 }
 
 button {
