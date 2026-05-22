@@ -11,7 +11,7 @@ echo "thinkpad-river installer"
 echo ""
 
 DEPS=(river waybar foot fuzzel mako swayidle waylock wlr-randr wlopm
-      grim slurp wl-copy swappy brightnessctl pamixer wlsunset
+      grim slurp wl-copy swappy brightnessctl pamixer wlsunset wob
       yazi zathura htop notify-send)
 
 MISSING=()
@@ -37,6 +37,7 @@ CLONEDIR=$(ask "Repo location          " "$HOME/thinkpad-river")
 BROWSER=$(ask  "Default browser        " "firefox")
 KBLAYOUT=$(ask "Keyboard layout        " "us")
 XCURSOR=$(ask  "Cursor size            " "24")
+NLTEMP=$(ask   "Night light temp (K)   " "3200")
 
 echo ""
 
@@ -46,6 +47,7 @@ cat > "$RICEDIR/river/init.local" << EOF
 BROWSER="$BROWSER"
 KBLAYOUT="$KBLAYOUT"
 XCURSOR_SIZE=$XCURSOR
+WLSUNSET_TEMP=$NLTEMP
 
 # --- DISPLAY ---
 INT="$INT"
@@ -85,6 +87,7 @@ echo "  Scale           : $INTSCALE"
 echo "  Browser         : $BROWSER"
 echo "  Keyboard layout : $KBLAYOUT"
 echo "  Cursor size     : $XCURSOR"
+echo "  Night light     : ${NLTEMP}K"
 echo ""
 echo "Next: run 'riverctl list-inputs' and fill in KEYBOARD, TOUCHPAD, TRACKPOINT"
 echo "      in river/init.local."

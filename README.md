@@ -32,7 +32,7 @@ A barebones Wayland rice for ThinkPads, built on [River](https://codeberg.org/ri
 - River (includes rivertile), Waybar, Foot, Fuzzel, Mako, Swayidle, Waylock
 - Wlr-randr, Wlopm
 - Grim, Slurp, Wl-clipboard, Swappy (screenshots)
-- Brightnessctl, Pamixer, Wlsunset, libnotify (notify-send)
+- Brightnessctl, Pamixer, Wlsunset, Wob, libnotify (notify-send)
 - Yazi, Zathura, Htop
 - Qt6ct (Qt theming — required for Qt apps to respect the dark theme)
 - JetBrainsMono Nerd Font
@@ -46,7 +46,7 @@ cd thinkpad-river
 ./install.sh
 ```
 
-The installer checks for missing dependencies, then prompts for your repo location, display output names, mode, scale, browser, keyboard layout, and cursor size. It generates `river/init.local` with your values, patches `swayidle/config` and the waybar configs (which are not shell scripts and cannot read `init.local` directly), and installs vantage.
+The installer checks for missing dependencies, then prompts for your repo location, display output names, mode, scale, browser, keyboard layout, cursor size, and night light temperature. It generates `river/init.local` with your values, patches `swayidle/config` and the waybar configs (which are not shell scripts and cannot read `init.local` directly), and installs vantage.
 
 After the installer finishes, fill in your input device identifiers:
 
@@ -116,6 +116,7 @@ cp river/init.local.example river/init.local
 | `INT` / `EXT` | Internal and external output names (`wlr-randr` to list) |
 | `INTMODE` / `INTSCALE` | Internal display mode and fractional scale |
 | `KEYBOARD` / `TOUCHPAD` / `TRACKPOINT` | Input device identifiers (`riverctl list-inputs` to find) |
+| `WLSUNSET_TEMP` | Night light color temperature in Kelvin (default: `3200` — lower is warmer) |
 | `LIBVA_DRIVER_NAME` / `LIBVA_DRIVERS_PATH` / `MOZ_SANDBOX_READ_PATH` | VA-API driver path overrides — only needed if your distro installs the driver outside the default search path |
 
 `display-cycle.sh` also reads `init.local` directly, so display variables only need to be set in one place.
@@ -188,7 +189,7 @@ Set `KEYBOARD`, `TOUCHPAD`, and `TRACKPOINT` in `river/init.local` to the identi
 | `Super + E` | File manager (yazi) |
 | `XF86Assistant` | File manager (yazi) — ThinkPad AI key |
 | `Super + I` | Toggle idle inhibit (prevents auto-lock/suspend) |
-| `Super + N` | Toggle night light (3200K via wlsunset) |
+| `Super + N` | Toggle night light (temperature set by `WLSUNSET_TEMP` in `init.local`) |
 | `Super + B` | Toggle waybar visibility |
 
 ### Windows
@@ -337,7 +338,6 @@ Adjust the path if you cloned elsewhere, then delete the repo directory.
 - **`swayidle/config` inline output name** — `wlopm --off <output>` has the output name inlined; swayidle config is not a shell script. The installer patches it from `INT`, but if you change `INT` in `init.local` later you must update `swayidle/config` manually.
 - **Waybar configs require re-patching on path changes** — `waybar/config` and `waybar/config-ext` have the repo path and output names patched in by the installer. If you change `CLONEDIR`, `INT`, or `EXT` after the initial install, re-run `install.sh` or update the affected lines manually.
 - **Waybar configs are intentionally separate** — `waybar/config` targets the internal display, `waybar/config-ext` the external. A single shared config does not work correctly across outputs. The only differences are the `output` field and the `backlight` module. Changes must be applied to both files.
-- **Brief screen flash on resume** — a single desktop frame may be visible on resume before waylock redraws. This is a known wlroots limitation with no config workaround.
 - **Mako has no output binding** — notifications follow focus; on external-only mode they appear on the external display.
 
 ## Troubleshooting
